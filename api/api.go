@@ -1,32 +1,38 @@
 package api
 
 import (
-	"pokego/client"
-	log "github.com/sirupsen/logrus"
 	"net/http"
+	"pokego/client"
+
 	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
 )
 
+const (
+	pokemonUrl = "https://pokeapi.co/api/v2/pokemon/"
+)
 
 func HandlePokemon(w http.ResponseWriter, r *http.Request) {
-	log.Print(w, "On my Way!")
+	log.Print("Received request")
 
 	vars := mux.Vars(r)
-    pokeId := vars["id"]
-    log.Print(w, "Pokemon Id: ", pokeId)
-	
+	pokeId := vars["id"]
+	log.Print("Pokemon Id to look for: ", pokeId)
+
 	client := client.InitClient()
-	body, err := client.GetSinglePokemon(pokeId)
+	body, code, err := client.GetUrl(pokemonUrl, pokeId)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(code)
+		return
 	}
-	w.WriteHeader(http.StatusOK)
+
+	w.WriteHeader(code)
 	w.Write(body)
 }
 
-func InitRouter () *mux.Router {
+func InitRouter() *mux.Router {
 	router := mux.NewRouter()
 
-	router.HandleFunc("/{id}", HandlePokemon)
+	router.HandleFunc("/pokemon/{id}", HandlePokemon)
 	return router
 }
